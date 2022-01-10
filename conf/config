@@ -1,0 +1,8 @@
+[default]
+region = us-west-2
+
+[ptc-ms-dev]
+output = json
+mfa_serial = arn:aws:iam::721933253214:mfa/dhartman
+
+#  aws sts get-session-token --profile ptc-ms-prod --serial-number arn:aws:iam::717934610271:mfa/dhartman@ptc.com --token-code 903809

@@ -88,81 +88,40 @@ def main():
     for credentials in aws_account_profiles:
         logging.info('AWS account: %s', credentials)
         aws_session = boto3.Session(profile_name=credentials)
-        #ec2_client = aws_session.client(service_name='iam')
+        ec2_client = aws_session.client(service_name='iam')
+        # Lookup the account aliases which provides the name of the AWS Account
+        # Note that currently there is only one entry
+        account_name = ec2_client.list_account_aliases()['AccountAliases'][0]
+        logging.info('Looking up Route53 hosted zones in [%s]', account_name)
+        r53_client = aws_session.client(service_name='route53')
+        r53_hosted_zones_paginator = r53_client.get_paginator('list_hosted_zones')
+        r53_hosted_zone_iterator = r53_hosted_zones_paginator.paginate()
+        for r53_hosted_zones in r53_hosted_zone_iterator:
+            for r53_hosted_zone in r53_hosted_zones['HostedZones']:
+                hosted_zone_id = r53_hosted_zone.get('Id')
+                hosted_zone_name = r53_hosted_zone.get('Name')
+                hosted_zone_record_set_count = r53_hosted_zone.get('ResourceRecordSetCount')
+                r53_record_sets_paginator = r53_client.get_paginator('list_resource_record_sets')
+                r53_record_sets_iterator = r53_record_sets_paginator.paginate(HostedZoneId=hosted_zone_id)
+                for r53_record_sets in r53_record_sets_iterator:
+                    for r53_record_set in r53_record_sets['ResourceRecordSets']:
+                        record_set_name = r53_record_set.get('Name')
+                        record_set_type = r53_record_set.get('Type')
+                        record_set_type = r53_record_set.get('SetIdentifier')
+                        record_set_type = r53_record_set.get('Weight')
+                        record_set_type = r53_record_set.get('Region')
+                        record_set_type = r53_record_set.get('GeoLocation')
+                        record_set_type = r53_record_set.get('Failover')
+                        record_set_type = r53_record_set.get('MultiValueAnswer')
+                        record_set_type = r53_record_set.get('TTL')
+                        record_set_type = r53_record_set.get('ResourceRecords')
+                        record_set_type = r53_record_set.get('AliasTarget')
+                        record_set_type = r53_record_set.get('HealthCheckId')
+                        record_set_type = r53_record_set.get('TrafficPolicyInstanceId')
+#                        logging.info("Found record set [%s]", record_set_name)
+
+
 
 if __name__ == "__main__":
     main()
 
- # aws_regions=config.get('aws','aws_regions').split(',')
- #
- #    aws_account_profiles=config.get('aws','aws_account_profiles').split(',')
- #
- #    aws_access_inventory = {}
- #
- #    logging.info('Open for writing - %s', config.get('aws_access', 'filename_output_csv'))
- #
- #    logging.info('Start polling AWS keys')
- #    for credentials in aws_account_profiles:
- #        logging.debug('AWS account: %s', credentials)
- #
- #        aws_session = boto3.Session(profile_name=credentials)
- #        ec2_client = aws_session.client(service_name='iam')
- #        response = ec2_client.list_users()
- #        logging.debug('response: %s', pprint.pformat(response))
- #
- #        for aws_user in response['Users']:
- #            user = UserAccess()
- #            logging.debug('user: %s', pprint.pformat(aws_user))
- #            user.account = credentials
- #            user.user_name = aws_user['UserName']
- #            user.last_login = aws_user.get('PasswordLastUsed').strftime('%m/%d/%Y') if aws_user.get('PasswordLastUsed') else ''
- #
- #            ### Get all groups this user belongs to
- #            groupResponse = ec2_client.list_groups_for_user(UserName=aws_user['UserName'])
- #            # Concatenate groups in a string
- #            aws_user_groups = []
- #            for aws_user_group in groupResponse['Groups']:
- #                aws_user_groups.append(aws_user_group.get('GroupName'))
- #            aws_user_groups.sort()
- #            user.groups = ' | '.join(aws_user_groups)
- #
- #            ### Determine if there is an inline policy on user.
- #            userPoliciesResponse = ec2_client.list_user_policies(UserName=aws_user['UserName'])
- #            aws_user_inline_policies = []
- #            for aws_user_inline_policy in userPoliciesResponse['PolicyNames']:
- #                aws_user_inline_policies.append(aws_user_inline_policy)
- #                aws_user_inline_policies.sort()
- #            user.inline_policies = ' | '.join(aws_user_inline_policies)
- #
- #            ### List directly attached user policies.
- #            userAttachedPoliciesResponse = ec2_client.list_attached_user_policies(UserName=aws_user['UserName'])
- #            aws_user_attached_policies = []
- #            for aws_user_attached_policy in userAttachedPoliciesResponse['AttachedPolicies']:
- #                aws_user_attached_policies.append(aws_user_attached_policy.get('PolicyName'))
- #                aws_user_attached_policies.sort()
- #            user.attached_policies = ' | '.join(aws_user_attached_policies)
- #
- #            aws_access_inventory[credentials + '-' + aws_user['UserName']] = user
- #
- #    logging.info('Writing inventory to json file: %s', config.get('aws_access', 'filename_output_json'))
- #
- #    rows = []
- #    aws_access_inventory_sorted = sorted(aws_access_inventory)
- #    for user in aws_access_inventory_sorted:
- #        user_object = aws_access_inventory.get(user)
- #        rows.append({'user_name':user_object.user_name,
- #                 'last_login':user_object.last_login,
- #                 'groups':user_object.groups,
- #                 'inline_policies':user_object.inline_policies,
- #                 'attached_policies':user_object.attached_policies})
- #
- #    user_row = RowSpec(ColumnSpec('user_name', 'User Name', width=1.3),
- #                         ColumnSpec('last_login', 'Last Login', width=1),
- #                         ColumnSpec('groups', 'Groups', width=1.7),
- #                         ColumnSpec('inline_policies', 'Inline Policies', width=1.5),
- #                         ColumnSpec('attached_policies', 'Attached Policies', width=1.5))
- #
- #    lines = user_row.makeall(rows)
- #
- #    outfile = open('aws_access_inventory.pdf', 'wb')
- #    outfile.write(PDFTable('AWS Access list', 'List of users, sorted by username', headers=user_row).render(lines))
