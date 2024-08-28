@@ -27,7 +27,7 @@ The AWS CLI uses credentials and configuration settings located in multiple plac
 If defined, this environment variable overrides the behavior of using the profile named [default] in the configuration file. You can override this environment variable by using the --profile command line parameter.
 
 ```
-export AWS_ACCESS_KEY_ID=<Key>
+export AWS_ACCESS_KEY_ID=<Key> 
 export AWS_SECRET_ACCESS_KEY=<Secret Key>
 export AWS_DEFAULT_REGION=<Default Region>
 ```
