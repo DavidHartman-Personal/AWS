@@ -1,0 +1,48 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Create 3 VPCs each with 2 public and 2 private subnets using nested stacks
+
+Parameters:
+  VPCCIDR1:
+    Type: String
+    Default: 10.0.0.0/16
+  VPCCIDR2:
+    Type: String
+    Default: 10.1.0.0/16
+  VPCCIDR3:
+    Type: String
+    Default: 10.2.0.0/16
+
+Resources:
+  VPC1Stack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      StackName: VPC1
+      TemplateURL: https://<your-s3-bucket>/vpc-module.yaml
+      Parameters:
+        VpcCidr: !Ref VPCCIDR1
+        VpcName: VPC1
+
+  VPC2Stack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      StackName: VPC2
+      TemplateURL: https://<your-s3-bucket>/vpc-module.yaml
+      Parameters:
+        VpcCidr: !Ref VPCCIDR2
+        VpcName: VPC2
+
+  VPC3Stack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://<your-s3-bucket>/vpc-module.yaml
+      Parameters:
+        VpcCidr: !Ref VPCCIDR3
+        VpcName: VPC3
+
+Outputs:
+  VPC1Id:
+    Value: !GetAtt VPC1Stack.Outputs.VpcId
+  VPC2Id:
+    Value: !GetAtt VPC2Stack.Outputs.VpcId
+  VPC3Id:
+    Value: !GetAtt VPC3Stack.Outputs.VpcId

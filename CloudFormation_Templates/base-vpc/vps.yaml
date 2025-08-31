@@ -1,0 +1,159 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Create 3 VPCs each with 2 public and 2 private subnets
+
+Parameters:
+  VPCCIDR1:
+    Type: String
+    Default: 10.0.0.0/16
+  VPCCIDR2:
+    Type: String
+    Default: 10.1.0.0/16
+  VPCCIDR3:
+    Type: String
+    Default: 10.2.0.0/16
+
+Mappings:
+  AZMap:
+    AZ1:
+      AZ: !Select [0, !GetAZs ""]
+    AZ2:
+      AZ: !Select [1, !GetAZs ""]
+
+Resources:
+  #############################
+  # VPC 1
+  #############################
+  VPC1:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref VPCCIDR1
+      EnableDnsHostnames: true
+      EnableDnsSupport: true
+      Tags:
+        - Key: Name
+          Value: VPC1
+
+  VPC1IGW:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: VPC1-IGW
+
+  VPC1AttachIGW:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref VPC1
+      InternetGatewayId: !Ref VPC1IGW
+
+  # Subnets
+  VPC1PublicSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC1
+      CidrBlock: 10.0.0.0/24
+      AvailabilityZone: !FindInMap [AZMap, AZ1, AZ]
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: VPC1-Public-AZ1
+
+  VPC1PublicSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC1
+      CidrBlock: 10.0.1.0/24
+      AvailabilityZone: !FindInMap [AZMap, AZ2, AZ]
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: VPC1-Public-AZ2
+
+  VPC1PrivateSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC1
+      CidrBlock: 10.0.10.0/24
+      AvailabilityZone: !FindInMap [AZMap, AZ1, AZ]
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Name
+          Value: VPC1-Private-AZ1
+
+  VPC1PrivateSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC1
+      CidrBlock: 10.0.11.0/24
+      AvailabilityZone: !FindInMap [AZMap, AZ2, AZ]
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Name
+          Value: VPC1-Private-AZ2
+
+  # Route Tables
+  VPC1PublicRT:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC1
+      Tags:
+        - Key: Name
+          Value: VPC1-PublicRT
+
+  VPC1PublicRoute:
+    Type: AWS::EC2::Route
+    DependsOn: VPC1AttachIGW
+    Properties:
+      RouteTableId: !Ref VPC1PublicRT
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref VPC1IGW
+
+  VPC1Subnet1RTAssoc:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref VPC1PublicSubnet1
+      RouteTableId: !Ref VPC1PublicRT
+
+  VPC1Subnet2RTAssoc:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref VPC1PublicSubnet2
+      RouteTableId: !Ref VPC1PublicRT
+
+  #############################
+  # VPC 2 (similar structure)
+  #############################
+  VPC2:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref VPCCIDR2
+      EnableDnsHostnames: true
+      EnableDnsSupport: true
+      Tags:
+        - Key: Name
+          Value: VPC2
+
+  # ... repeat subnets, IGW, and RT for VPC2 ...
+
+  #############################
+  # VPC 3 (similar structure)
+  #############################
+  VPC3:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref VPCCIDR3
+      EnableDnsHostnames: true
+      EnableDnsSupport: true
+      Tags:
+        - Key: Name
+          Value: VPC3
+
+  # ... repeat subnets, IGW, and RT for VPC3 ...
+
+Outputs:
+  VPC1Id:
+    Value: !Ref VPC1
+  VPC2Id:
+    Value: !Ref VPC2
+  VPC3Id:
+    Value: !Ref VPC3

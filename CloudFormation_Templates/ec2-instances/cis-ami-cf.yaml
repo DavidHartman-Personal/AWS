@@ -1,0 +1,54 @@
+---
+Metadata:
+  AWSToolsMetrics:
+    IaC_Generator: "arn:aws:cloudformation:us-east-1:012333835340:generatedTemplate/d375cb2b-2b46-41a3-99c9-819619f5cd3f"
+Parameters:
+  KeyName:
+    Default: "Windows2022CIS"
+    Type: "String"
+    Description: "Name of an existing EC2 KeyPair to enable SSH access"
+Resources:
+  EC2Instance:
+    UpdateReplacePolicy: "Retain"
+    Type: "AWS::EC2::Instance"
+    DeletionPolicy: "Retain"
+    Properties:
+      Tenancy: "default"
+      PrivateIpAddress: "172.31.30.126"
+      InstanceInitiatedShutdownBehavior: "stop"
+      BlockDeviceMappings:
+      - Ebs:
+          SnapshotId: "snap-05871419858fdb7a0"
+          VolumeType: "gp3"
+          Iops: 3000
+          VolumeSize: 40
+          Encrypted: false
+          DeleteOnTermination: true
+        DeviceName: "/dev/sda1"
+      PrivateDnsNameOptions:
+        EnableResourceNameDnsARecord: true
+        HostnameType: "ip-name"
+        EnableResourceNameDnsAAAARecord: false
+      SecurityGroupIds:
+      - "sg-0cb445638735e26b6"
+      EbsOptimized: false
+      DisableApiTermination: false
+      SourceDestCheck: true
+      PlacementGroupName: ""
+      VpcId: "vpc-0455b16e8ee294e12"
+      State:
+        Code: "16"
+        Name: "running"
+      NetworkInterfaces:
+      - Ipv6Addresses: []
+        SecondaryPrivateIpAddressCount: 0
+        NetworkInterfaceId: "eni-0e0c9061a20dd5d49"
+        DeviceIndex: "0"
+      ImageId: "ami-0849ea915930a9b51"
+      InstanceType: "t2.micro"
+      Monitoring: false
+      Tags:
+      - Value: "Windows Server 2022 CIS"
+        Key: "Name"
+      CreditSpecification:
+        CPUCredits: "standard"
